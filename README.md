@@ -79,8 +79,8 @@ be responsible for resolving ``bar``.
     that promise.  Being able to become a new promise is useful for
     managing delays, combining results, or recovering from errors.
 
-If the ``foo()`` promise gets fulfilled and you omit the value
-handler, the **value** will go to ``bar``.
+If the ``foo()`` promise gets rejected and you omit the error handler,
+the **error** will go to ``bar``:
 
 ```javascript
 var bar = foo()
@@ -88,8 +88,8 @@ var bar = foo()
 })
 ```
 
-If the ``foo()`` promise gets rejected and you omit the error handler,
-the **error** will go to ``bar``.
+If the ``foo()`` promise gets fulfilled and you omit the value
+handler, the **value** will go to ``bar``:
 
 ```javascript
 var bar = foo()
@@ -98,7 +98,7 @@ var bar = foo()
 ```
 
 Q promises provide a ``fail`` shorthand for ``then`` when you are only
-interested in handling the error.
+interested in handling the error:
 
 ```javascript
 var bar = foo()
@@ -109,7 +109,7 @@ var bar = foo()
 They also have a ``fin`` function that is like a ``finally`` clause.
 The final handler gets called, with no arguments, when the promise
 returned by ``foo()`` either returns a value or throws an error.  The
-value or error passes directly to ``bar``.
+value returned or error thrown passes directly to ``bar``.
 
 ```javascript
 var bar = foo()
