@@ -39,7 +39,7 @@ try {
     // client-side scrapers do not try to load
     // "event-queue".
     nextTick = serverSideRequire("event-queue").enqueue;
-} catch (e) {
+} catch (exception) {
     // browsers
     if (typeof MessageChannel !== "undefined") {
         // modern browsers
@@ -65,9 +65,6 @@ try {
     }
 }
 
-// useful for an identity stub and default resolvers
-function identity (x) {return x;}
-
 // shims
 var shim = function (object, name, shim) {
     if (!object[name])
@@ -75,7 +72,9 @@ var shim = function (object, name, shim) {
     return object[name];
 };
 
-var freeze = shim(Object, "freeze", identity);
+var freeze = shim(Object, "freeze", function (object) {
+    return object;
+});
 
 var create = shim(Object, "create", function (prototype) {
     var Type = function () {};
@@ -193,8 +192,8 @@ function defer() {
 
     deferred.promise = freeze(promise);
     deferred.resolve = become;
-    deferred.reject = function (reason) {
-        return become(reject(reason));
+    deferred.reject = function (reason, error) {
+        return become(reject(reason, error));
     };
 
     return deferred;
@@ -245,9 +244,13 @@ function Promise(descriptor, fallback, valueOf) {
                 result = fallback.apply(promise, [op].concat(args));
             }
         } catch (exception) {
-            result = reject(exception);
+            if (exception && exception.message) {
+                result = reject(exception.message, exception);
+            } else {
+                result = reject(exception);
+            }
         }
-        return (resolved || identity)(result);
+        return resolved(result);
     };
 
     if (valueOf)
@@ -348,7 +351,7 @@ if (typeof window !== "undefined") {
  * @param reason value describing the failure
  */
 exports.reject = reject;
-function reject(reason) {
+function reject(reason, error) {
     var rejection = Promise({
         "when": function (rejected) {
             // note that the error has been handled
@@ -358,8 +361,10 @@ function reject(reason) {
                     errors.splice(at, 1);
                     rejections.splice(at, 1);
                 }
+                return rejected(reason, error);
+            } else {
+                return this;
             }
-            return rejected ? rejected(reason) : reject(reason);
         }
     }, function fallback(op) {
         return reject(reason);
@@ -371,7 +376,7 @@ function reject(reason) {
     });
     // note that the error has not been handled
     rejections.push(rejection);
-    errors.push(reason);
+    errors.push(error || reason);
     return rejection;
 }
 
@@ -527,7 +532,11 @@ function when(value, fulfilled, rejected) {
         try {
             return fulfilled ? fulfilled(value) : value;
         } catch (exception) {
-            return reject(exception);
+            if (exception && exception.message) {
+                return reject(exception.message, exception);
+            } else {
+                return reject(exception);
+            }
         }
     }
 
@@ -535,7 +544,11 @@ function when(value, fulfilled, rejected) {
         try {
             return rejected ? rejected(reason) : reject(reason);
         } catch (exception) {
-            return reject(exception);
+            if (exception && exception.message) {
+                return reject(exception.message, exception);
+            } else {
+                return reject(exception);
+            }
         }
     }
 
@@ -611,6 +624,8 @@ function async(makeGenerator) {
             } catch (exception) {
                 if (isStopIteration(exception)) {
                     return exception.value;
+                } else if (exception && exception.message) {
+                    return reject(exception.message, exception);
                 } else {
                     return reject(exception);
                 }

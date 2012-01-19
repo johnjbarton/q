@@ -4,6 +4,10 @@
 
  - WARNING: The undocumented ``Method`` export will be
    removed.  Use ``sender(op)``.
+ - WARNING: exceptions caught as handlers will no longer be
+   reported as the "reason" for an error: their ``message``
+   propety will instead.  The error object will be received
+   by rejection handlers as the second argument.
 
 ## Next minor
 
