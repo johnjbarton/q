@@ -361,7 +361,7 @@ function reject(reason, error) {
                     errors.splice(at, 1);
                     rejections.splice(at, 1);
                 }
-                return rejected(reason, error);
+                return rejected(reason, error, this);
             } else {
                 return this;
             }
@@ -540,9 +540,15 @@ function when(value, fulfilled, rejected) {
         }
     }
 
-    function _rejected(reason) {
+    function _rejected(reason, error, rejection) {
         try {
-            return rejected ? rejected(reason) : reject(reason);
+            if (rejected) {
+                return rejected(reason, error, rejection);
+            } else if (rejection) {
+                return rejection ;
+            } else {
+                return reject(reason, error);
+            }
         } catch (exception) {
             if (exception && exception.message) {
                 return reject(exception.message, exception);
@@ -561,11 +567,11 @@ function when(value, fulfilled, rejected) {
                 resolve(value)
                 .promiseSend("when", _fulfilled, _rejected)
             );
-        }, function (reason) {
+        }, function (reason, error, rejection) {
             if (done)
                 return;
             done = true;
-            deferred.resolve(_rejected(reason));
+            deferred.resolve(_rejected(reason, error, rejection));
         });
     });
 
