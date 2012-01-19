@@ -244,7 +244,7 @@ function Promise(descriptor, fallback, valueOf) {
                 result = fallback.apply(promise, [op].concat(args));
             }
         } catch (exception) {
-            if (exception && exception.message) {
+            if (exception && typeof exception.message === "string") {
                 result = reject(exception.message, exception);
             } else {
                 result = reject(exception);
@@ -532,7 +532,7 @@ function when(value, fulfilled, rejected) {
         try {
             return fulfilled ? fulfilled(value) : value;
         } catch (exception) {
-            if (exception && exception.message) {
+            if (exception && typeof exception.message === "string") {
                 return reject(exception.message, exception);
             } else {
                 return reject(exception);
@@ -550,7 +550,7 @@ function when(value, fulfilled, rejected) {
                 return reject(reason, error);
             }
         } catch (exception) {
-            if (exception && exception.message) {
+            if (exception && typeof exception.message === "string") {
                 return reject(exception.message, exception);
             } else {
                 return reject(exception);
@@ -630,7 +630,7 @@ function async(makeGenerator) {
             } catch (exception) {
                 if (isStopIteration(exception)) {
                     return exception.value;
-                } else if (exception && exception.message) {
+                } else if (exception && typeof exception.message === "string") {
                     return reject(exception.message, exception);
                 } else {
                     return reject(exception);
