@@ -237,14 +237,14 @@ exports.setCause = setCause;
 
 var nextTick;
 var head;
-try {
+/*try {
     // Narwhal, Node (with a package, wraps process.nextTick)
     // "require" is renamed to "serverSideRequire" so
     // client-side scrapers do not try to load
     // "event-queue".
     nextTick = serverSideRequire("event-queue").enqueue;
 } catch (exception) {
-    // browsers
+*/    // browsers
     if (typeof MessageChannel !== "undefined") {
         // modern browsers
         // http://www.nonblocking.io/2011/06/windownexttick.html
@@ -284,7 +284,7 @@ try {
             setTimeout(task, 0);
         };
     }
-}
+/* } */
 
 // shims
 var shim = function (object, name, shim) {
