@@ -48,8 +48,7 @@ function removeCommonSegments(baseSegments, segments) {
   return [segments[segments.length - 1]];
 }
 
-var reQ = /q\/q\.js$/;
-var reNative = /^native\s/;
+
 
 function description(callsite) {
   var text = "";
@@ -60,25 +59,42 @@ function description(callsite) {
   return text;
 }
 
+function FileFilter() {
+  this.inQ = false;
+}
+ 
+FileFilter.showSystem = false;
+FileFilter.reQ = /q\/q\.js$/;
+FileFilter.reNative = /^native\s/;
+
+FileFilter.prototype.isSystem  = function(file) {
+  if (FileFilter.showSystem) {
+    return false;
+  }
+  if (FileFilter.reQ.test(file)) {
+    this.inQ = true;
+    return true;
+  } else if (this.inQ && FileFilter.reNative.test(file)) {
+    return true;
+  } else {
+    this.inQ = false;
+  }
+}
+
+
 function filterAndCount(error, arrayOfCallSite) {
   error.fileNameColumns = 0;
   error.largestLineNumber = 0;
   var baseSegments = window.location.toString().split('/');
   
   var filteredStack = [];
-  var inQ = false;
+  var fileFilter = new FileFilter();
   for (var i = 0; i < arrayOfCallSite.length; i++) {
     var callsite = arrayOfCallSite[i];
     var file = callsite.getFileName();
-    if (reQ.test(file)) {
-      inQ = true;
-      continue;
-    } else if (inQ && reNative.test(file)) {
-      continue;
-    } else {
+    if (!fileFilter.isSystem(file)) {
       file = removeCommonSegments(baseSegments, file.split('/')).join('/');
 
-      inQ = false;
       if (file.length > error.fileNameColumns) {
         error.fileNameColumns = file.length;
       }
@@ -446,9 +462,6 @@ function Promise(descriptor, fallback, valueOf) {
                 result = descriptor[op].apply(promise, args);
             } else {
                 result = fallback.apply(promise, [op].concat(args));
-            }
-            if (typeof result === 'undefined') {
-              console.warn('Q promiseSend result is undefined\n', head.cause.stack);
             }
         } catch (exception) {
             if (exception && typeof exception.message === "string") {
