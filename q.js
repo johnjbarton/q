@@ -65,7 +65,7 @@ var head;
               }
               task();
             } catch (exc) {
-              console.error("Q task fails "+exc.message, exc);
+              console.error("Q task fails "+exc.message+"\n", exc.stack);
             }
         };
         // We enter as the newest frame in a callstack.
